@@ -7,10 +7,14 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config is the runtime configuration
 type Config struct {
 	DataDirectory string `yaml:"data-directory"`
 }
 
+// Load a configuration from a given location.  Any unset values will
+// use the default values associated.  If location does not exist, only
+// default values will be used
 func LoadConfig(location string) (config *Config, err error) {
 	log.Printf("Loading config from %s\n", location)
 	config = &Config{}
@@ -22,6 +26,8 @@ func LoadConfig(location string) (config *Config, err error) {
 	return
 }
 
+// Load a yaml configuration from disk and then apply default values for
+// any unset values
 func loadConfig(c *Config, location string) (config *Config, err error) {
 	file, err := os.Open(location)
 	if err != nil {
@@ -40,6 +46,7 @@ func loadConfig(c *Config, location string) (config *Config, err error) {
 	return
 }
 
+// Assign default values for any unset values in c
 func loadDefaults(c *Config) (config *Config) {
 	if c.DataDirectory == "" {
 		c.DataDirectory = "~/.defnodo"

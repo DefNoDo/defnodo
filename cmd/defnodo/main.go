@@ -38,7 +38,8 @@ func main() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				err = app.Start(globalConfig.Config)
+				defnodo := app.NewDefNoDoService(globalConfig.Config)
+				err = defnodo.Start()
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -56,7 +57,8 @@ func main() {
 					log.Fatal(err)
 				}
 
-				err = app.Stop(globalConfig.Config)
+				defnodo := app.NewDefNoDoService(globalConfig.Config)
+				err = defnodo.Stop()
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -74,7 +76,8 @@ func main() {
 					log.Fatal(err)
 				}
 
-				err = app.Restart(globalConfig.Config)
+				defnodo := app.NewDefNoDoService(globalConfig.Config)
+				err = defnodo.Restart()
 				if err != nil {
 					log.Fatal(err)
 				}
