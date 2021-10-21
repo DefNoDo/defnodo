@@ -10,6 +10,7 @@ import (
 // Config is the runtime configuration
 type Config struct {
 	DataDirectory string `yaml:"data-directory"`
+	IsService     bool
 }
 
 // Load a configuration from a given location.  Any unset values will

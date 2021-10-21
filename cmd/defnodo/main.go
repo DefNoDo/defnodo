@@ -25,7 +25,14 @@ func main() {
 			EnvVars: []string{"DEFNODORC"},
 		},
 	}
-	runFlags := []cli.Flag{}
+	runFlags := []cli.Flag{
+		&cli.BoolFlag{
+			Name:    "service",
+			Usage:   "Run defnodo in a way suitable for a service",
+			Value:   false,
+			EnvVars: []string{"DEFNODO_SERVICE"},
+		},
+	}
 	serviceFlags := []cli.Flag{}
 	serviceInstallFlags := []cli.Flag{}
 	serviceStartFlags := []cli.Flag{}
@@ -194,6 +201,7 @@ func loadGlobalOptions(c *cli.Context) (result *GlobalConfig, err error) {
 	if err != nil {
 		return
 	}
+	config.IsService = c.Bool("service")
 
 	serviceOptions := make(service.KeyValue)
 	serviceOptions["UserService"] = true
@@ -202,6 +210,12 @@ func loadGlobalOptions(c *cli.Context) (result *GlobalConfig, err error) {
 		DisplayName: "DefNoDo",
 		Description: "DefNoDO service for running dockerd and podman on MacOS",
 		Option:      serviceOptions,
+		Arguments: []string{
+			"-c",
+			c.String("config"),
+			"run",
+			"--service",
+		},
 	}
 	result = &GlobalConfig{
 		Config:        config,

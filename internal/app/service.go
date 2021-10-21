@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/kardianos/service"
 )
@@ -22,10 +23,21 @@ func ProcessService(defnodo *DefNoDo, serviceConfig *service.Config, command str
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Status: %+v\n", status)
+		switch status {
+		case service.StatusRunning:
+			log.Printf("DefNoDo is running\n")
+		case service.StatusStopped:
+			log.Printf("DefNoDo is stopped")
+		default:
+			log.Printf("Unknown serice status\n")
+		}
 		return nil
 	}
 	err = service.Control(s, command)
+
+	if err != nil {
+		return
+	}
 
 	return
 }

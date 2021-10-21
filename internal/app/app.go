@@ -61,9 +61,12 @@ func (defnodo *DefNoDo) Run() (err error) {
 
 	log.Printf("Starting linuxkit: %v", cmd.Args)
 
-	cmd.Stdin = os.Stdin
+	if !defnodo.config.IsService {
+		cmd.Stdin = os.Stdin
+	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
 	cmd.Run()
 
 	return
