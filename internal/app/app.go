@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+
+	"github.com/kardianos/service"
 )
 
 type DefNoDo struct {
@@ -18,9 +20,20 @@ func NewDefNoDoService(config *Config) (defnodo *DefNoDo) {
 	return
 }
 
-// Start starts the service if not already started based
-// on the supplied runtime config.
-func (defnodo *DefNoDo) Start() (err error) {
+// Service definition interface
+func (defnodo *DefNoDo) Start(s service.Service) error {
+	// Start should not block, just run stuff
+	go defnodo.Run()
+	return nil
+}
+
+func (defnodo *DefNoDo) Stop(s service.Service) error {
+	// Shutdown/terminate the service
+	return nil
+}
+
+// Run the defnodo service
+func (defnodo *DefNoDo) Run() (err error) {
 	fmt.Printf("Starting service with config: %+v\n", defnodo.config)
 	linuxkitPath, err := exec.LookPath("linuxkit")
 	// vpnkitPath, err = exec.LookPath("vpnkit")
@@ -52,25 +65,6 @@ func (defnodo *DefNoDo) Start() (err error) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Run()
-
-	return
-}
-
-// Stop stops the service if running based on the supplied
-// runtime config.
-func (defnodo *DefNoDo) Stop() (err error) {
-	fmt.Printf("Stopping service with config %+v\n", defnodo.config)
-	return
-}
-
-// Restart stops the service if running, then starts the service
-// as defined by the supplied runtime config.
-func (defnodo *DefNoDo) Restart() (err error) {
-	err = defnodo.Stop()
-	if err != nil {
-		return
-	}
-	err = defnodo.Start()
 
 	return
 }

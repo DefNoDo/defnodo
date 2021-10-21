@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/ismarc/defnodo/internal/app"
+	"github.com/kardianos/service"
 	"github.com/urfave/cli/v2"
 )
 
 type GlobalConfig struct {
-	Config *app.Config
+	Config        *app.Config
+	ServiceConfig *service.Config
 }
 
 func main() {
@@ -23,65 +25,148 @@ func main() {
 			EnvVars: []string{"DEFNODORC"},
 		},
 	}
-	startFlags := []cli.Flag{}
-	stopFlags := []cli.Flag{}
-	restartFlags := []cli.Flag{}
+	runFlags := []cli.Flag{}
+	serviceFlags := []cli.Flag{}
+	serviceInstallFlags := []cli.Flag{}
+	serviceStartFlags := []cli.Flag{}
+	serviceStopFlags := []cli.Flag{}
+	serviceRestartFlags := []cli.Flag{}
+	serviceUninstallFlags := []cli.Flag{}
+	serviceStatusFlags := []cli.Flag{}
 
 	commands := []*cli.Command{
 		{
-			Name:    "start",
-			Usage:   "Start the defnodo and underlying docker service",
-			Aliases: []string{"s"},
-			Flags:   startFlags,
-			Action: func(c *cli.Context) (err error) {
-				globalConfig, err := loadGlobalOptions(c)
-				if err != nil {
-					log.Fatal(err)
-				}
-				defnodo := app.NewDefNoDoService(globalConfig.Config)
-				err = defnodo.Start()
-				if err != nil {
-					log.Fatal(err)
-				}
-				return
-			},
-		},
-		{
-			Name:    "stop",
-			Usage:   "Stop the defnodo and underlying docker service",
-			Aliases: []string{"t"},
-			Flags:   stopFlags,
-			Action: func(c *cli.Context) (err error) {
-				globalConfig, err := loadGlobalOptions(c)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				defnodo := app.NewDefNoDoService(globalConfig.Config)
-				err = defnodo.Stop()
-				if err != nil {
-					log.Fatal(err)
-				}
-				return
-			},
-		},
-		{
-			Name:    "restart",
-			Usage:   "Restart the defnodo and underlying docker service",
+			Name:    "run",
+			Usage:   "Run defnodo and the underlying docker service",
 			Aliases: []string{"r"},
-			Flags:   restartFlags,
+			Flags:   runFlags,
 			Action: func(c *cli.Context) (err error) {
 				globalConfig, err := loadGlobalOptions(c)
 				if err != nil {
 					log.Fatal(err)
 				}
-
 				defnodo := app.NewDefNoDoService(globalConfig.Config)
-				err = defnodo.Restart()
+				err = defnodo.Run()
 				if err != nil {
 					log.Fatal(err)
 				}
 				return
+			},
+		},
+		{
+			Name:    "service",
+			Usage:   "Control defnodo service",
+			Aliases: []string{"s"},
+			Flags:   serviceFlags,
+			Subcommands: []*cli.Command{
+				{
+					Name:    "status",
+					Usage:   "Display defnodo service status",
+					Aliases: []string{"t"},
+					Flags:   serviceStatusFlags,
+					Action: func(c *cli.Context) (err error) {
+						globalConfig, err := loadGlobalOptions(c)
+						if err != nil {
+							log.Fatal(err)
+						}
+						defnodo := app.NewDefNoDoService(globalConfig.Config)
+						err = app.ProcessService(defnodo, globalConfig.ServiceConfig, "status")
+						if err != nil {
+							log.Fatal(err)
+						}
+						return
+					},
+				},
+				{
+					Name:    "install",
+					Usage:   "Install the defnodo service",
+					Aliases: []string{"i"},
+					Flags:   serviceInstallFlags,
+					Action: func(c *cli.Context) (err error) {
+						globalConfig, err := loadGlobalOptions(c)
+						if err != nil {
+							log.Fatal(err)
+						}
+						defnodo := app.NewDefNoDoService(globalConfig.Config)
+						err = app.ProcessService(defnodo, globalConfig.ServiceConfig, "install")
+						if err != nil {
+							log.Fatal(err)
+						}
+						return
+					},
+				},
+				{
+					Name:    "uninstall",
+					Usage:   "Uninstall the defnodo service",
+					Aliases: []string{"u"},
+					Flags:   serviceUninstallFlags,
+					Action: func(c *cli.Context) (err error) {
+						globalConfig, err := loadGlobalOptions(c)
+						if err != nil {
+							log.Fatal(err)
+						}
+						defnodo := app.NewDefNoDoService(globalConfig.Config)
+						err = app.ProcessService(defnodo, globalConfig.ServiceConfig, "uninstall")
+						if err != nil {
+							log.Fatal(err)
+						}
+						return
+					},
+				},
+				{
+					Name:    "start",
+					Usage:   "Start the defnodo service",
+					Aliases: []string{"s"},
+					Flags:   serviceStartFlags,
+					Action: func(c *cli.Context) (err error) {
+						globalConfig, err := loadGlobalOptions(c)
+						if err != nil {
+							log.Fatal(err)
+						}
+						defnodo := app.NewDefNoDoService(globalConfig.Config)
+						err = app.ProcessService(defnodo, globalConfig.ServiceConfig, "start")
+						if err != nil {
+							log.Fatal(err)
+						}
+						return
+					},
+				},
+				{
+					Name:    "stop",
+					Usage:   "Stop the defnodo service",
+					Aliases: []string{"h"},
+					Flags:   serviceStopFlags,
+					Action: func(c *cli.Context) (err error) {
+						globalConfig, err := loadGlobalOptions(c)
+						if err != nil {
+							log.Fatal(err)
+						}
+						defnodo := app.NewDefNoDoService(globalConfig.Config)
+						err = app.ProcessService(defnodo, globalConfig.ServiceConfig, "stop")
+						if err != nil {
+							log.Fatal(err)
+						}
+						return
+					},
+				},
+				{
+					Name:    "restart",
+					Usage:   "Restart the defnodo service",
+					Aliases: []string{"r"},
+					Flags:   serviceRestartFlags,
+					Action: func(c *cli.Context) (err error) {
+						globalConfig, err := loadGlobalOptions(c)
+						if err != nil {
+							log.Fatal(err)
+						}
+						defnodo := app.NewDefNoDoService(globalConfig.Config)
+						err = app.ProcessService(defnodo, globalConfig.ServiceConfig, "restart")
+						if err != nil {
+							log.Fatal(err)
+						}
+						return
+					},
+				},
 			},
 		},
 	}
@@ -109,8 +194,18 @@ func loadGlobalOptions(c *cli.Context) (result *GlobalConfig, err error) {
 	if err != nil {
 		return
 	}
+
+	serviceOptions := make(service.KeyValue)
+	serviceOptions["UserService"] = true
+	serviceConfig := &service.Config{
+		Name:        "defnodo",
+		DisplayName: "DefNoDo",
+		Description: "DefNoDO service for running dockerd and podman on MacOS",
+		Option:      serviceOptions,
+	}
 	result = &GlobalConfig{
-		Config: config,
+		Config:        config,
+		ServiceConfig: serviceConfig,
 	}
 	return
 }
