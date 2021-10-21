@@ -1,0 +1,3 @@
+[submodule "deps/linuxkit"]
+	path = deps/linuxkit
+	url = git@github.com:linuxkit/linuxkit.git
