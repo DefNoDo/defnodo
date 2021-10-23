@@ -20,12 +20,16 @@ function build_vpnkit {
   cp _build/default/src/bin/main.exe ../../output/vpnkit
 }
 
+function build_hyperkit {
+  make all
+  cp build/hyperkit ../../output/hyperkit
+}
+
 function get_vpnkit_tools {
   HOMEBREW_NO_AUTO_UPDATE=1
   brew install wget pkg-config dylibbundler libtool automake
   brew install opam
   opam env || opam init --compiler 4.12.0 -n
-
 }
 
 echo "Building linuxkit..."
@@ -34,3 +38,6 @@ echo "Building linuxkit..."
 echo "Building vpnkit..."
 get_vpnkit_tools
 (cd deps/vpnkit/ && build_vpnkit $(pwd))
+
+echo "Building hyperkit..."
+(cd deps/hyperkit/ && build_hyperkit)
