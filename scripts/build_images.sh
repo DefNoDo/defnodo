@@ -3,6 +3,7 @@ set -e
 
 function finish {
   popd
+  exit 1
 }
 
 trap finish EXIT

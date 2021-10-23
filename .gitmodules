@@ -1,3 +1,6 @@
 [submodule "deps/linuxkit"]
 	path = deps/linuxkit
 	url = git@github.com:linuxkit/linuxkit.git
+[submodule "deps/vpnkit"]
+	path = deps/vpnkit
+	url = git@github.com:moby/vpnkit.git
