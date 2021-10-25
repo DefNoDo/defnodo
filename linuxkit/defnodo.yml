@@ -1,13 +1,17 @@
 # DefNoDo linuxkit VM image definition
+# Kernel image to launch
 kernel:
   image: linuxkit/kernel:5.4.39
   cmdline: "console=ttyS0 page_poison=1"
+# Files to copy into the image along with the init image for bootup
 init:
   - linuxkit/vpnkit-expose-port:v0.8 # install vpnkit-expose-port and vpnkit-iptables-wrapper on host
   - linuxkit/init:v0.8
   - linuxkit/runc:v0.8
   - linuxkit/containerd:v0.8
   - linuxkit/ca-certificates:v0.8
+  - defnodo/utils:latest # defnodo specific tools and utilities needed
+# Run once at boot commands
 onboot:
   # support metadata for optional config in /run/config
   - name: metadata
@@ -27,13 +31,8 @@ onboot:
   # # make a swap file on the mounted disk
   - name: swap
     image: linuxkit/swap:v0.8
-    command: ["/swap.sh", "--path", "/var/lib/swap", "--size", "1024M"]
+    command: ["/swap.sh", "--path", "/var/lib/swap", "--size", "2048M"]
   # mount-vpnkit mounts the 9p share used by vpnkit to coordinate port forwarding
-  - name: disable-ipv6
-    image: linuxkit/sysctl:v0.8
-    binds:
-      - /etc/sysctl.d/:/etc/sysctl.d/
-    command: ["/sbin/sysctl", "-w", "-w net.ipv6.conf.all.disable_ipv6=1"]
   - name: mount-vpnkit
     image: alpine:3.11
     binds:
@@ -43,6 +42,7 @@ onboot:
     rootfsPropagation: shared
     command: ["sh", "-c", "mkdir -p /host_var/vpnkit && mount -v -t 9p -o trans=virtio,dfltuid=1001,dfltgid=50,version=9p2000 port /host_var/vpnkit"]
   # move logs to the mounted disk (this is a temporary fix until we can limit the log sizes)
+  # FIXME: This currently fails because of it being existing directories being moved.  Clean up later
   # - name: move-logs
   #   image: alpine:3.11
   #   binds:
@@ -51,22 +51,6 @@ onboot:
   - name: dhcpcd
     image: linuxkit/dhcpcd:v0.8
     command: ["/sbin/dhcpcd", "--nobackground", "-f", "/dhcpcd.conf", "-1"]
-  - name: mount-home
-    image: defnodo/nfs-client
-    binds:
-      - /var:/host_var:rbind,rshared
-    capabilities:
-      - CAP_SYS_ADMIN
-    rootfsPropagation: shared
-    net: host
-    env:
-      # - SERVER=host.docker.internal
-      - SERVER=192.168.65.2
-      - SHARE=/mount
-      - MOUNT_OPTIONS=port=7777,mountport=7777
-      - MOUNTPOINT=/host_var/nfs
-      - FSTYPE=nfs
-    command: ["/usr/local/bin/nfs_entry.sh"]
 services:
   # Enable acpi to shutdown on power events
   - name: acpid
@@ -89,17 +73,10 @@ services:
     command: ["/vsudd", "-inport", "2376:unix:/var/run/docker.sock"]
   # vpnkit-forwarder forwards network traffic to/from the host via VSOCK port 62373. 
   # It needs access to the vpnkit 9P coordination share 
-  # - name: vpnkit-forwarder
-  #   # image: linuxkit/vpnkit-forwarder:v0.8
-  #   image: linuxkit/vpnkit-forwarder:56ed525d212ca17e01b54d9b66c39b534a4392bc
-  #   binds:
-  #       - /var/vpnkit:/port
-  #   net: host
-  #   command: ["/vpnkit-forwarder", "-vsockPort", "62373"]
   - name: vpnkit-forwarder
     # image: linuxkit/vpnkit-forwarder:v0.8
-    # image: linuxkit/vpnkit-forwarder:0.5.0-upstream
-    image: defnodo/vpnkit-forwarder:master
+    image: defnodo/vpnkit-forwarder:v0.5.0-custom
+    # image: defnodo/vpnkit-forwarder:master
     binds:
       - /var/vpnkit:/port
       - /var/run:/host_var/run
@@ -115,6 +92,7 @@ services:
   # Run dockerd with the vpnkit userland proxy from the vpnkit-forwarder container.
   # Bind mounts /var/run to allow vsudd to connect to docker.sock, /var/vpnkit
   # for vpnkit coordination and /run/config/docker for the configuration file.
+  # Include 9p FS mount tools to allow directory and volume mounting from the host
   - name: docker-dfm
     # image: docker:19.03.8-dind
     image: docker:18.06.0-ce-dind
@@ -129,23 +107,18 @@ services:
       - /var/lib/docker:/var/lib/docker
       - /lib/modules:/lib/modules
       - /var/vpnkit:/port # vpnkit control 9p mount
-      - /var/nfs:/Users/mbrace # home directory mount
       - /var/run:/var/run
       - /run:/run
       - /run/config/docker:/var/config/docker
       - /usr/bin/vpnkit-expose-port:/usr/bin/vpnkit-expose-port # userland proxy
       - /usr/bin/vpnkit-iptables-wrapper:/usr/bin/iptables # iptables wrapper
-    command: [ "/usr/local/bin/docker-init", "/usr/local/bin/dockerd", "--",
-            "--config-file", "/var/config/docker/daemon.json",
-            "--swarm-default-advertise-addr=eth0",
-            # "--containerd", "/var/run/containerd/containerd.sock",
-            "--userland-proxy-path", "/usr/bin/vpnkit-expose-port",
-            "--storage-driver", "overlay2" ]
+      - /usr/local/bin/mount9p_fuse:/usr/local/bin/mount9p_fuse # FUSE 9p FS mount tool
+      - /usr/local/bin/mount_home_dirs.sh:/usr/local/bin/mount_home_dirs.sh # Sets up the proper mount locations
+      - /usr/local/bin/run_docker.sh:/usr/local/bin/run_docker.sh # Wraps mounts and starts docker
+      - /dev/fuse:/dev/fuse
+    command: [ "/usr/local/bin/run_docker.sh" ]
     runtime:
       mkdir: ["/var/lib/docker"]
 
+# Generic vpnkit command to pair with a build image from this file
 # vpnkit --ethernet docker-for-mac-state/vpnkit_eth.sock --vsock-path docker-for-mac-state/connect  --port docker-for-mac-state/vpnkit_port.sock --host-names host.docker.internal --debug
-# root@64d680fa7bba:/# /etc/init.d/nfs-common start
-#  * Starting NFS common utilities                                                                                                [ OK ]
-# root@64d680fa7bba:/# mount -o port=7777,mountport=7777,nfsvers=3,noacl,tcp -t nfs host.docker.internal:/mount /nfs/mount
-# root@64d680fa7bba:/# ls /nfs/mount/

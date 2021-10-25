@@ -7,3 +7,6 @@
 [submodule "deps/hyperkit"]
 	path = deps/hyperkit
 	url = git@github.com:moby/hyperkit.git
+[submodule "deps/go9p"]
+	path = deps/go9p
+	url = git@github.com:knusbaum/go9p.git

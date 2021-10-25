@@ -1,5 +1,0 @@
-FROM d3fk/nfs-client
-
-ADD scripts/nfs_entry.sh /usr/local/bin/nfs_entry.sh
-
-ENTRYPOINT [ "/usr/local/bin/nfs_entry.sh" ]

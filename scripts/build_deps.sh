@@ -25,6 +25,10 @@ function build_hyperkit {
   cp build/hyperkit ../../output/hyperkit
 }
 
+function build_go9p {
+  go build -o ../../output/go9p cmd/export9p/main.go
+}
+
 function get_vpnkit_tools {
   HOMEBREW_NO_AUTO_UPDATE=1
   brew install wget pkg-config dylibbundler libtool automake
@@ -32,12 +36,18 @@ function get_vpnkit_tools {
   opam env || opam init --compiler 4.12.0 -n
 }
 
-echo "Building linuxkit..."
-(cd deps/linuxkit/ && build_linuxkit)
+if [ $# -eq 0 ]; then
+  set - "linuxkit" "vpnkit" "hyperkit" "go9p"
+fi
 
-echo "Building vpnkit..."
-get_vpnkit_tools
-(cd deps/vpnkit/ && build_vpnkit $(pwd))
+while (($#)); do
+  name=${1}
+  command="build_${name}"
+  echo "Building ${name}..."
+  if [ $1 == "vpnkit" ]; then
+    get_vpnkit_tools
+  fi
 
-echo "Building hyperkit..."
-(cd deps/hyperkit/ && build_hyperkit)
+  (cd deps/${name}/ && ${command})
+  shift
+done

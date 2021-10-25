@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
-function finish {
-  popd
-  exit 1
-}
+DOCKER_HOST=""
+if [ $# -gt 0 ]; then
+  DOCKER_HOST="${1}"
+fi
 
-trap finish EXIT
-
-pushd dockerfiles
-
-echo "Building NFS client..."
-docker build -t defnodo/nfs-client:latest . -f Dockerfile.nfsclient
+export DOCKER_HOST
 
 echo "Building vpnkit-forwarder..."
-docker build -t defnodo/vpnkit-forwarder:v0.5.0-custom . -f Dockerfile.vpnkit-forwarder
+docker build -t defnodo/vpnkit-forwarder:v0.5.0-custom dockerfiles/. -f dockerfiles/Dockerfile.vpnkit-forwarder
+
+echo "Building defnodo utils..."
+docker build -t defnodo/utils:latest . -f dockerfiles/Dockerfile.utils
