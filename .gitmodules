@@ -1,0 +1,12 @@
+[submodule "deps/linuxkit"]
+	path = deps/linuxkit
+	url = git@github.com:linuxkit/linuxkit.git
+[submodule "deps/vpnkit"]
+	path = deps/vpnkit
+	url = git@github.com:moby/vpnkit.git
+[submodule "deps/hyperkit"]
+	path = deps/hyperkit
+	url = git@github.com:moby/hyperkit.git
+[submodule "deps/go9p"]
+	path = deps/go9p
+	url = git@github.com:knusbaum/go9p.git

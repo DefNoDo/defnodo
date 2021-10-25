@@ -1,0 +1,12 @@
+FROM golang:alpine as golang-build
+
+ADD deps/go9p /workdir
+RUN cd /workdir && \
+    go build -o mount9p_fuse cmd/mount9p/main.go
+
+FROM scratch
+
+COPY --from=golang-build /workdir/mount9p_fuse /usr/local/bin/mount9p_fuse
+
+COPY dockerfiles/scripts/mount_home_dirs.sh /usr/local/bin/mount_home_dirs.sh
+COPY dockerfiles/scripts/run_docker.sh /usr/local/bin/run_docker.sh
