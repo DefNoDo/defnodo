@@ -9,4 +9,5 @@ if [ $# -gt 0 ]; then
 fi
 
 export DOCKER_HOST
-./output/linuxkit -v build -format "kernel+squashfs" -dir vm-image/ linuxkit/defnodo.yml
+#./output/linuxkit -v build -format "kernel+squashfs" -dir vm-image/ linuxkit/defnodo.yml
+./output/linuxkit -v build -format "kernel+squashfs" -dir defnodo-data/ linuxkit/defnodo.yml

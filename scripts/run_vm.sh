@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-./output/linuxkit run hyperkit -fw bunk_uefi.fd -hyperkit output/hyperkit -vpnkit output/vpnkit -cpus 4 -mem 8192 -disk size=10G -networking=vpnkit  -vsock-ports 2376 -squashfs -data-file metadata.json vm-image/defnodo
+#./output/linuxkit run hyperkit -fw bunk_uefi.fd -hyperkit output/hyperkit -vpnkit output/vpnkit -cpus 4 -mem 8192 -disk size=10G -networking=vpnkit  -vsock-ports 2376 -squashfs -data-file metadata.json vm-image/defnodo
+./output/linuxkit run hyperkit -fw bunk_uefi.fd -hyperkit output/hyperkit -vpnkit output/vpnkit -cpus 4 -mem 8192 -disk size=10G -networking=vpnkit  -vsock-ports 2376 -squashfs -data-file metadata.json defnodo-data/defnodo
 
 # ./output/hyperkit -A -u -F vm-image/defnodo-state/hyperkit.pid -c 1 -m 4096M \
 #   -s 0:0,hostbridge -s 31,lpc \
