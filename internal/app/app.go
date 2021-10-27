@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/ismarc/defnodo/internal/serve9p"
 	"github.com/kardianos/service"
@@ -41,36 +42,36 @@ func (defnodo *DefNoDo) Run() (err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", []string{homedir}, true)
+	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", []string{filepath.Join(homedir, "dev/defnodo")}, false)
 	if err != nil {
 		log.Fatal(err)
 	}
 	go fileShare.Run()
 
-	// linuxkitPath, err := exec.LookPath("linuxkit")
-	// vpnkitPath, err = exec.LookPath("vpnkit")
-	// if err != nil {
-	// 	log.Print("Unable to find linuxkit binary")
-	// 	return
-	// }
+	ex, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	exPath := filepath.Dir(ex)
+	log.Printf("Path to executable: %s\n", exPath)
+	linuxkitPath := filepath.Join(exPath, "linuxkit")
+	log.Printf("linuxkit path: %s\n", linuxkitPath)
 
-	// ./linuxkit run hyperkit -fw bunk_uefi.fd  -disk size=4G -networking=vpnkit -vsock-ports 2376 -kernel  -data-file metadata.json -mem 4096 docker-for-mac
-	// err = os.Chdir(defnodo.config.DataDirectory)
-	// if err != nil {
-	// 	os.MkdirAll(defnodo.config.DataDirectory, 666)
-	// }
-	cmd := exec.Command("./scripts/run_vm.sh")
-	// cmd := exec.Command(linuxkitPath,
-	// 	"run", "hyperkit",
-	// 	"-fw", "bunk_uefi.fd",
-	// 	"-disk", "size=4G",
-	// 	"-networking", "vpnkit",
-	// 	"-vsock-ports", "2376",
-	// 	"-kernel",
-	// 	"-data-file", "metadata.json",
-	// 	"-mem", "4096",
-	// 	"-state", "defnodo-state",
-	// 	"defnodo")
+	// See scripts/run_vm.sh for example run command
+	cmd := exec.Command(linuxkitPath,
+		"run", "hyperkit",
+		"-fw", filepath.Join(exPath, "..", "bunk_uefi.fd"),
+		"-hyperkit", filepath.Join(exPath, "hyperkit"),
+		"-vpnkit", filepath.Join(exPath, "vpnkit"),
+		"-cpus", "4",
+		"-mem", "8192",
+		"-disk", "size=10G",
+		"-networking=vpnkit",
+		"-vsock-ports", "2376",
+		"-squashfs",
+		"-data-file", filepath.Join(exPath, "..", "metadata.json"),
+		"defnodo-data/defnodo")
+
 	cmd.Env = os.Environ()
 
 	log.Printf("Starting linuxkit: %v", cmd.Args)
@@ -80,7 +81,7 @@ func (defnodo *DefNoDo) Run() (err error) {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
+	defer os.Remove(filepath.Join(exPath, "defnodo-data/defnodo-state/hyperkit.pid"))
 	cmd.Run()
 
 	return

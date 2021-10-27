@@ -1,6 +1,7 @@
 #!/bin/sh -e
 
-MOUNT_DIR="/Users/mbrace"
+MOUNT_DIR=$(cat /var/config/docker/user.config | tr -d '\n')
+# MOUNT_DIR="/Users/mbrace"
 apk add fuse
 
 mkdir -p "${MOUNT_DIR}"
