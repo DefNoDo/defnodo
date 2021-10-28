@@ -11,6 +11,7 @@ import (
 type Config struct {
 	DataDirectory string `yaml:"data-directory"`
 	IsService     bool
+	Interactive   bool
 }
 
 // Load a configuration from a given location.  Any unset values will

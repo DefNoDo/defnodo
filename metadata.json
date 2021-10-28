@@ -3,6 +3,9 @@
     "entries": {
       "daemon.json": {
         "content": "{\n  \"debug\" : true,\n  \"experimental\" : true\n}\n"
+      },
+      "user.config": {
+        "content": "/Users/mbrace"
       }
     }
   }
