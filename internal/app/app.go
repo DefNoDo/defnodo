@@ -5,7 +5,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/ismarc/defnodo/internal/serve9p"
 	"github.com/kardianos/service"
@@ -42,7 +44,7 @@ func (defnodo *DefNoDo) Run() (err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", []string{filepath.Join(homedir, "dev/defnodo")}, false)
+	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", []string{homedir}, false)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,7 +72,7 @@ func (defnodo *DefNoDo) Run() (err error) {
 		"-vsock-ports", "2376",
 		"-squashfs",
 		"-data-file", filepath.Join(exPath, "..", "metadata.json"),
-		"defnodo-data/defnodo")
+		filepath.Join(exPath, "..", "defnodo-data/defnodo"))
 
 	cmd.Env = os.Environ()
 
@@ -81,8 +83,19 @@ func (defnodo *DefNoDo) Run() (err error) {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	defer os.Remove(filepath.Join(exPath, "defnodo-data/defnodo-state/hyperkit.pid"))
+	startCleanupHandler(exPath)
 	cmd.Run()
 
 	return
+}
+
+func startCleanupHandler(basePath string) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		log.Printf("Removing file: %s\n", filepath.Join(basePath, "..", "defnodo-data/defnodo-state/hyperkit.pid"))
+		os.Remove(filepath.Join(basePath, "..", "defnodo-data/defnodo-state/hyperkit.pid"))
+		os.Exit(0)
+	}()
 }
