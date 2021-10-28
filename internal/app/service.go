@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/kardianos/service"
@@ -9,7 +8,7 @@ import (
 
 func ProcessService(defnodo *DefNoDo, serviceConfig *service.Config, command string) (err error) {
 	// install, start, stop, restart, uninstall, special case status
-	fmt.Println("Processing DefNoDo service...")
+	log.Println("Processing DefNoDo service...")
 	s, err := service.New(defnodo, serviceConfig)
 
 	if err != nil {

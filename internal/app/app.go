@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -38,7 +37,7 @@ func (defnodo *DefNoDo) Stop(s service.Service) error {
 
 // Run the defnodo service
 func (defnodo *DefNoDo) Run() (err error) {
-	fmt.Printf("Starting service with config: %+v\n", defnodo.config)
+	log.Printf("Starting service with config: %+v\n", defnodo.config)
 
 	homedir, err := os.UserHomeDir()
 	if err != nil {
@@ -78,7 +77,7 @@ func (defnodo *DefNoDo) Run() (err error) {
 
 	log.Printf("Starting linuxkit: %v", cmd.Args)
 
-	if !defnodo.config.IsService {
+	if defnodo.config.Interactive {
 		cmd.Stdin = os.Stdin
 	}
 	cmd.Stdout = os.Stdout

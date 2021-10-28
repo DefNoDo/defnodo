@@ -13,6 +13,7 @@ import (
 type GlobalConfig struct {
 	Config        *app.Config
 	ServiceConfig *service.Config
+	Interactive   bool
 }
 
 func main() {
@@ -26,6 +27,12 @@ func main() {
 		},
 	}
 	runFlags := []cli.Flag{
+		&cli.BoolFlag{
+			Name:    "interactive",
+			Usage:   "Run defnodo with a local interactive shell",
+			Aliases: []string{"i"},
+			Value:   false,
+		},
 		&cli.BoolFlag{
 			Name:    "service",
 			Usage:   "Run defnodo in a way suitable for a service",
@@ -202,6 +209,7 @@ func loadGlobalOptions(c *cli.Context) (result *GlobalConfig, err error) {
 		return
 	}
 	config.IsService = c.Bool("service")
+	config.Interactive = c.Bool("interactive")
 
 	serviceOptions := make(service.KeyValue)
 	serviceOptions["UserService"] = true
@@ -220,6 +228,7 @@ func loadGlobalOptions(c *cli.Context) (result *GlobalConfig, err error) {
 	result = &GlobalConfig{
 		Config:        config,
 		ServiceConfig: serviceConfig,
+		Interactive:   c.Bool("interactive"),
 	}
 	return
 }
