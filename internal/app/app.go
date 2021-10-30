@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/ismarc/defnodo/internal/serve9p"
@@ -62,6 +63,10 @@ func (defnodo *DefNoDo) Run() (err error) {
 	}
 	defer os.Remove(dataFile)
 
+	runLocation := defnodo.config.DataDirectory
+	if !strings.HasPrefix(runLocation, "/") {
+		runLocation = filepath.Join(exPath, "..", defnodo.config.DataDirectory)
+	}
 	// See scripts/run_vm.sh for example run command
 	cmd := exec.Command(linuxkitPath,
 		"run", "hyperkit",
@@ -75,7 +80,7 @@ func (defnodo *DefNoDo) Run() (err error) {
 		"-vsock-ports", "2376",
 		"-squashfs",
 		"-data-file", dataFile,
-		filepath.Join(exPath, "..", "defnodo-data/defnodo"))
+		filepath.Join(defnodo.config.DataDirectory, "defnodo"))
 
 	cmd.Env = os.Environ()
 
