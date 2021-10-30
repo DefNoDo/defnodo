@@ -2,21 +2,15 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
 )
 
-// {
-//   "docker": {
-//     "entries": {
-//       "daemon.json": {
-//         "content": "{\n  \"debug\" : true,\n  \"experimental\" : true\n}\n"
-//       },
-//       "user.config": {
-//         "content": "/Users/mbrace"
-//       }
-//     }
-//   }
-// }
+// See https://github.com/linuxkit/linuxkit/blob/master/docs/metadata.md for info about
+// formatting of the metadata.
 
 type metadataJson struct {
 	Docker dockerMetadata `json:"docker"`
@@ -40,12 +34,27 @@ type dockerUserConfigJson struct {
 }
 
 func (defnodo *DefNoDo) generateMetadata(directory string) (filename string, err error) {
-	// Read and build the different parts of the metadata
+	// Read any specified daemon.json
+	daemon_json := "{}"
+	if defnodo.config.DockerDaemonJson != "" {
+		daemon, err := os.ReadFile(defnodo.config.DockerDaemonJson)
+		if err != nil {
+			return filename, err
+		}
+		if !json.Valid(daemon) {
+			msg := fmt.Sprintf("%s does not contain valid JSON: \n%s\n", defnodo.config.DockerDaemonJson, string(daemon))
+			err = errors.New(msg)
+			return filename, err
+		}
+		daemon_split := strings.Split(string(daemon), "\n")
+		daemon_json = strings.Join(daemon_split, "\n")
+	}
+	// Build the different parts of the metadata
 	data := &metadataJson{
 		Docker: dockerMetadata{
 			Entries: dockerEntriesMetadata{
 				Daemon: dockerDaemonJson{
-					Content: "{\n  \"debug\" : true,\n  \"experimental\" : true\n}\n",
+					Content: daemon_json,
 				},
 				UserConfig: dockerUserConfigJson{
 					Content: defnodo.config.VolumeMounts[0],
@@ -62,7 +71,7 @@ func (defnodo *DefNoDo) generateMetadata(directory string) (filename string, err
 	defer file.Close()
 
 	// render the json to the temp file
-	js, err := json.Marshal(data)
+	js, err := json.MarshalIndent(data, "", "  ")
 	_, err = file.Write(js)
 	return
 }

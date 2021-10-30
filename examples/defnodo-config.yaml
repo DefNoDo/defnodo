@@ -1,0 +1,9 @@
+---
+# Directory paths to allow mounting into the containers.
+# Default: current user's home directory
+# Currently only uses the first entry in the list
+volume-mounts:
+  - /Users/mbrace/dev
+# Path to daemon.json to use for docker.
+# Default: {}
+docker-daemon.json: examples/daemon.json
