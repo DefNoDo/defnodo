@@ -12,8 +12,15 @@ type Config struct {
 	DataDirectory    string   `yaml:"data-directory"`
 	VolumeMounts     []string `yaml:"volume-mounts"`
 	DockerDaemonJson string   `yaml:"docker-daemon.json"`
+	VM               VMConfig `yaml:"vm"`
 	IsService        bool
 	Interactive      bool
+}
+
+type VMConfig struct {
+	Memory   int    `yaml:"memory"`
+	Cpus     int    `yaml:"cpus"`
+	DiskSize string `yaml:"disk-size"`
 }
 
 // Load a configuration from a given location.  Any unset values will
@@ -62,8 +69,23 @@ func loadDefaults(c *Config) (config *Config) {
 		}
 		c.VolumeMounts = []string{homedir}
 	}
+	c.VM = loadVMDefaults(c.VM)
 
 	config = c
 
+	return
+}
+
+func loadVMDefaults(c VMConfig) (config VMConfig) {
+	if c.Memory <= 0 {
+		c.Memory = 2048
+	}
+	if c.Cpus <= 0 {
+		c.Cpus = 1
+	}
+	if len(c.DiskSize) == 0 {
+		c.DiskSize = "10G"
+	}
+	config = c
 	return
 }

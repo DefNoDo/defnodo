@@ -1,11 +1,13 @@
 package app
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
 
 	"github.com/ismarc/defnodo/internal/serve9p"
@@ -66,9 +68,9 @@ func (defnodo *DefNoDo) Run() (err error) {
 		"-fw", filepath.Join(exPath, "..", "bunk_uefi.fd"),
 		"-hyperkit", filepath.Join(exPath, "hyperkit"),
 		"-vpnkit", filepath.Join(exPath, "vpnkit"),
-		"-cpus", "4",
-		"-mem", "8192",
-		"-disk", "size=10G",
+		"-cpus", strconv.Itoa(defnodo.config.VM.Cpus),
+		"-mem", strconv.Itoa(defnodo.config.VM.Memory),
+		"-disk", fmt.Sprintf("size=%s", defnodo.config.VM.DiskSize),
 		"-networking=vpnkit",
 		"-vsock-ports", "2376",
 		"-squashfs",
