@@ -1,11 +1,14 @@
 package app
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/ismarc/defnodo/internal/serve9p"
@@ -39,11 +42,7 @@ func (defnodo *DefNoDo) Stop(s service.Service) error {
 func (defnodo *DefNoDo) Run() (err error) {
 	log.Printf("Starting service with config: %+v\n", defnodo.config)
 
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", []string{homedir}, false)
+	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", defnodo.config.VolumeMounts, defnodo.config.Interactive)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,20 +57,30 @@ func (defnodo *DefNoDo) Run() (err error) {
 	linuxkitPath := filepath.Join(exPath, "linuxkit")
 	log.Printf("linuxkit path: %s\n", linuxkitPath)
 
+	dataFile, err := defnodo.generateMetadata(".")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(dataFile)
+
+	runLocation := defnodo.config.DataDirectory
+	if !strings.HasPrefix(runLocation, "/") {
+		runLocation = filepath.Join(exPath, "..", defnodo.config.DataDirectory)
+	}
 	// See scripts/run_vm.sh for example run command
 	cmd := exec.Command(linuxkitPath,
 		"run", "hyperkit",
 		"-fw", filepath.Join(exPath, "..", "bunk_uefi.fd"),
 		"-hyperkit", filepath.Join(exPath, "hyperkit"),
 		"-vpnkit", filepath.Join(exPath, "vpnkit"),
-		"-cpus", "4",
-		"-mem", "8192",
-		"-disk", "size=10G",
+		"-cpus", strconv.Itoa(defnodo.config.VM.Cpus),
+		"-mem", strconv.Itoa(defnodo.config.VM.Memory),
+		"-disk", fmt.Sprintf("size=%s", defnodo.config.VM.DiskSize),
 		"-networking=vpnkit",
 		"-vsock-ports", "2376",
 		"-squashfs",
-		"-data-file", filepath.Join(exPath, "..", "metadata.json"),
-		filepath.Join(exPath, "..", "defnodo-data/defnodo"))
+		"-data-file", dataFile,
+		filepath.Join(defnodo.config.DataDirectory, "defnodo"))
 
 	cmd.Env = os.Environ()
 
@@ -82,19 +91,20 @@ func (defnodo *DefNoDo) Run() (err error) {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	startCleanupHandler(exPath)
+	startCleanupHandler(exPath, dataFile)
 	cmd.Run()
 
 	return
 }
 
-func startCleanupHandler(basePath string) {
+func startCleanupHandler(basePath string, tempFile string) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sigs
 		log.Printf("Removing file: %s\n", filepath.Join(basePath, "..", "defnodo-data/defnodo-state/hyperkit.pid"))
 		os.Remove(filepath.Join(basePath, "..", "defnodo-data/defnodo-state/hyperkit.pid"))
+		os.Remove(tempFile)
 		os.Exit(0)
 	}()
 }

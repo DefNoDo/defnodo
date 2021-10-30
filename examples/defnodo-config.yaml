@@ -1,0 +1,20 @@
+---
+# Directory paths to allow mounting into the containers.
+# Default: current user's home directory
+# Currently only uses the first entry in the list
+volume-mounts:
+  - /Users/mbrace/dev
+# Path to daemon.json to use for docker.
+# Default: {}
+docker-daemon.json: examples/daemon.json
+# Directory containing VM image and to use for associated
+# data and sockets
+data-directory: defnodo-data
+# Underlying VM configuration
+vm:
+  # Amount of memory to allocate in M
+  memory: 8192
+  # Number of CPUs
+  cpus: 4
+  # Data disk size
+  disk-size: "10G"

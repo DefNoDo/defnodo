@@ -3,33 +3,61 @@ package app
 import (
 	"log"
 	"os"
+	"path/filepath"
 
+	"github.com/creasty/defaults"
 	"gopkg.in/yaml.v2"
 )
 
 // Config is the runtime configuration
 type Config struct {
-	DataDirectory string `yaml:"data-directory"`
-	IsService     bool
-	Interactive   bool
+	DataDirectory    string   `yaml:"data-directory"`
+	VolumeMounts     []string `yaml:"volume-mounts"`
+	DockerDaemonJson string   `default:"" yaml:"docker-daemon.json"`
+	VM               VMConfig `yaml:"vm"`
+	IsService        bool     `default:"false"`
+	Interactive      bool     `default:"false"`
+}
+
+type VMConfig struct {
+	Memory   int    `default:"2048" yaml:"memory"`
+	Cpus     int    `default:"1" yaml:"cpus"`
+	DiskSize string `default:"10G" yaml:"disk-size"`
+}
+
+// Implement interface for setting dynamic defaults
+func (c *Config) SetDefaults() {
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if defaults.CanUpdate(c.DataDirectory) {
+		c.DataDirectory = filepath.Join(homedir, ".defnodo")
+	}
+	if defaults.CanUpdate(c.VolumeMounts) {
+		c.VolumeMounts = []string{homedir}
+	}
 }
 
 // Load a configuration from a given location.  Any unset values will
 // use the default values associated.  If location does not exist, only
 // default values will be used
 func LoadConfig(location string) (config *Config, err error) {
-	log.Printf("Loading config from %s\n", location)
 	config = &Config{}
-	if _, err := os.Stat(location); os.IsNotExist(err) {
-		config = loadDefaults(config)
-	} else {
+	if _, err := os.Stat(location); !os.IsNotExist(err) {
+		log.Printf("Loading config from %s\n", location)
 		config, err = loadConfig(config, location)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Printf("No config found, using all defaults...\n")
 	}
+	defaults.Set(config)
 	return
 }
 
-// Load a yaml configuration from disk and then apply default values for
-// any unset values
+// Load a yaml configuration from disk
 func loadConfig(c *Config, location string) (config *Config, err error) {
 	file, err := os.Open(location)
 	if err != nil {
@@ -44,17 +72,6 @@ func loadConfig(c *Config, location string) (config *Config, err error) {
 		log.Print("Error parsing config file\n")
 	}
 
-	config = loadDefaults(c)
-	return
-}
-
-// Assign default values for any unset values in c
-func loadDefaults(c *Config) (config *Config) {
-	if c.DataDirectory == "" {
-		c.DataDirectory = "~/.defnodo"
-	}
-
 	config = c
-
 	return
 }

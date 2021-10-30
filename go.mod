@@ -11,6 +11,7 @@ require (
 	9fans.net/go v0.0.2 // indirect
 	github.com/Plan9-Archive/libauth v0.0.0-20180917063427-d1ca9e94969d // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
+	github.com/creasty/defaults v1.5.2 // indirect
 	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
 	github.com/fhs/mux9p v0.3.1 // indirect
 	github.com/kardianos/service v1.2.0 // indirect
