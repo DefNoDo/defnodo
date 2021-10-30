@@ -39,11 +39,7 @@ func (defnodo *DefNoDo) Stop(s service.Service) error {
 func (defnodo *DefNoDo) Run() (err error) {
 	log.Printf("Starting service with config: %+v\n", defnodo.config)
 
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", []string{homedir}, false)
+	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", defnodo.config.VolumeMounts, defnodo.config.Interactive)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,6 +54,12 @@ func (defnodo *DefNoDo) Run() (err error) {
 	linuxkitPath := filepath.Join(exPath, "linuxkit")
 	log.Printf("linuxkit path: %s\n", linuxkitPath)
 
+	dataFile, err := defnodo.generateMetadata(".")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(dataFile)
+
 	// See scripts/run_vm.sh for example run command
 	cmd := exec.Command(linuxkitPath,
 		"run", "hyperkit",
@@ -70,7 +72,7 @@ func (defnodo *DefNoDo) Run() (err error) {
 		"-networking=vpnkit",
 		"-vsock-ports", "2376",
 		"-squashfs",
-		"-data-file", filepath.Join(exPath, "..", "metadata.json"),
+		"-data-file", dataFile,
 		filepath.Join(exPath, "..", "defnodo-data/defnodo"))
 
 	cmd.Env = os.Environ()
@@ -82,19 +84,20 @@ func (defnodo *DefNoDo) Run() (err error) {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	startCleanupHandler(exPath)
+	startCleanupHandler(exPath, dataFile)
 	cmd.Run()
 
 	return
 }
 
-func startCleanupHandler(basePath string) {
+func startCleanupHandler(basePath string, tempFile string) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sigs
 		log.Printf("Removing file: %s\n", filepath.Join(basePath, "..", "defnodo-data/defnodo-state/hyperkit.pid"))
 		os.Remove(filepath.Join(basePath, "..", "defnodo-data/defnodo-state/hyperkit.pid"))
+		os.Remove(tempFile)
 		os.Exit(0)
 	}()
 }

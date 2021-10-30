@@ -9,9 +9,11 @@ import (
 
 // Config is the runtime configuration
 type Config struct {
-	DataDirectory string `yaml:"data-directory"`
-	IsService     bool
-	Interactive   bool
+	DataDirectory    string   `yaml:"data-directory"`
+	VolumeMounts     []string `yaml:"volume-mounts"`
+	DockerDaemonJson string   `yaml:"docker-daemon.json"`
+	IsService        bool
+	Interactive      bool
 }
 
 // Load a configuration from a given location.  Any unset values will
@@ -52,6 +54,13 @@ func loadConfig(c *Config, location string) (config *Config, err error) {
 func loadDefaults(c *Config) (config *Config) {
 	if c.DataDirectory == "" {
 		c.DataDirectory = "~/.defnodo"
+	}
+	if len(c.VolumeMounts) == 0 {
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatal(err)
+		}
+		c.VolumeMounts = []string{homedir}
 	}
 
 	config = c
