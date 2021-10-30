@@ -94,8 +94,8 @@ services:
   # for vpnkit coordination and /run/config/docker for the configuration file.
   # Include 9p FS mount tools to allow directory and volume mounting from the host
   - name: docker-dfm
-    # image: docker:19.03.8-dind
-    image: docker:18.06.0-ce-dind
+    image: docker:dind
+    # image: docker:18.06.0-ce-dind
     capabilities:
       - all
     net: host
@@ -115,6 +115,7 @@ services:
       - /usr/local/bin/mount9p_fuse:/usr/local/bin/mount9p_fuse # FUSE 9p FS mount tool
       - /usr/local/bin/mount_home_dirs.sh:/usr/local/bin/mount_home_dirs.sh # Sets up the proper mount locations
       - /usr/local/bin/run_docker.sh:/usr/local/bin/run_docker.sh # Wraps mounts and starts docker
+      - /usr/local/share/containerd_config.toml:/etc/containerd/config.toml # Internal containerd minimal config
       - /dev/fuse:/dev/fuse
     command: [ "/usr/local/bin/run_docker.sh" ]
     runtime:
