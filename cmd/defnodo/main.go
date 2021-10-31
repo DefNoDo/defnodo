@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/ismarc/defnodo/internal/app"
@@ -213,6 +214,10 @@ func loadGlobalOptions(c *cli.Context) (result *GlobalConfig, err error) {
 
 	serviceOptions := make(service.KeyValue)
 	serviceOptions["UserService"] = true
+	configLocation, err := filepath.Abs(c.String("config"))
+	if err != nil {
+		return
+	}
 	serviceConfig := &service.Config{
 		Name:        "defnodo",
 		DisplayName: "DefNoDo",
@@ -220,7 +225,7 @@ func loadGlobalOptions(c *cli.Context) (result *GlobalConfig, err error) {
 		Option:      serviceOptions,
 		Arguments: []string{
 			"-c",
-			c.String("config"),
+			configLocation,
 			"run",
 			"--service",
 		},

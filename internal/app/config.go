@@ -11,12 +11,13 @@ import (
 
 // Config is the runtime configuration
 type Config struct {
-	DataDirectory    string   `yaml:"data-directory"`
-	VolumeMounts     []string `yaml:"volume-mounts"`
-	DockerDaemonJson string   `default:"" yaml:"docker-daemon.json"`
-	VM               VMConfig `yaml:"vm"`
-	IsService        bool     `default:"false"`
-	Interactive      bool     `default:"false"`
+	DataDirectory       string   `yaml:"data-directory"`
+	VolumeMounts        []string `yaml:"volume-mounts"`
+	DockerDaemonJson    string   `default:"" yaml:"docker-daemon.json"`
+	VM                  VMConfig `yaml:"vm"`
+	IsService           bool     `default:"false"`
+	Interactive         bool     `default:"false"`
+	ConfigBaseDirectory string
 }
 
 type VMConfig struct {
@@ -53,7 +54,14 @@ func LoadConfig(location string) (config *Config, err error) {
 	} else {
 		log.Printf("No config found, using all defaults...\n")
 	}
+
 	defaults.Set(config)
+
+	configDir, err := filepath.Abs(filepath.Dir(location))
+	if err != nil {
+		return
+	}
+	config.ConfigBaseDirectory = configDir
 	return
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -37,12 +38,13 @@ func (defnodo *DefNoDo) generateMetadata(directory string) (filename string, err
 	// Read any specified daemon.json
 	daemon_json := "{}"
 	if defnodo.config.DockerDaemonJson != "" {
-		daemon, err := os.ReadFile(defnodo.config.DockerDaemonJson)
+		daemon_location := filepath.Join(defnodo.config.ConfigBaseDirectory, defnodo.config.DockerDaemonJson)
+		daemon, err := os.ReadFile(daemon_location)
 		if err != nil {
 			return filename, err
 		}
 		if !json.Valid(daemon) {
-			msg := fmt.Sprintf("%s does not contain valid JSON: \n%s\n", defnodo.config.DockerDaemonJson, string(daemon))
+			msg := fmt.Sprintf("%s does not contain valid JSON: \n%s\n", daemon_location, string(daemon))
 			err = errors.New(msg)
 			return filename, err
 		}

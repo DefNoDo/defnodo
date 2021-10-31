@@ -6,7 +6,7 @@ volume-mounts:
   - /Users/mbrace/dev
 # Path to daemon.json to use for docker.
 # Default: {}
-docker-daemon.json: examples/daemon.json
+docker-daemon.json: daemon.json
 # Directory containing VM image and to use for associated
 # data and sockets
 data-directory: defnodo-data
