@@ -57,16 +57,17 @@ func (defnodo *DefNoDo) Run() (err error) {
 	linuxkitPath := filepath.Join(exPath, "linuxkit")
 	log.Printf("linuxkit path: %s\n", linuxkitPath)
 
-	dataFile, err := defnodo.generateMetadata(".")
+	runLocation := defnodo.config.DataDirectory
+	if !strings.HasPrefix(runLocation, "/") {
+		runLocation = filepath.Join(exPath, "..", defnodo.config.DataDirectory)
+	}
+
+	dataFile, err := defnodo.generateMetadata(runLocation)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer os.Remove(dataFile)
 
-	runLocation := defnodo.config.DataDirectory
-	if !strings.HasPrefix(runLocation, "/") {
-		runLocation = filepath.Join(exPath, "..", defnodo.config.DataDirectory)
-	}
 	// See scripts/run_vm.sh for example run command
 	cmd := exec.Command(linuxkitPath,
 		"run", "hyperkit",
@@ -80,7 +81,7 @@ func (defnodo *DefNoDo) Run() (err error) {
 		"-vsock-ports", "2376",
 		"-squashfs",
 		"-data-file", dataFile,
-		filepath.Join(defnodo.config.DataDirectory, "defnodo"))
+		filepath.Join(runLocation, "defnodo"))
 
 	cmd.Env = os.Environ()
 
