@@ -68,6 +68,17 @@ func (defnodo *DefNoDo) Run() (err error) {
 	}
 	defer os.Remove(dataFile)
 
+	// Running vpnkit separately stuff
+	// ethSock := filepath.Join(runLocation, "defnodo-state", "vpnkit_eth.sock")
+	// portSock := filepath.Join(runLocation, "defnodo-state", "vpnkit_port.sock")
+	// vsockSock := filepath.Join(runLocation, "defnodo-state", "connect")
+	// go defnodo.runVPNKit(filepath.Join(exPath, "vpnkit"),
+	// 	ethSock,
+	// 	portSock,
+	// 	vsockSock)
+
+	// networkingParam := fmt.Sprintf("-networking=vpnkit,%s,%s", ethSock, portSock)
+
 	// See scripts/run_vm.sh for example run command
 	cmd := exec.Command(linuxkitPath,
 		"run", "hyperkit",
@@ -78,6 +89,7 @@ func (defnodo *DefNoDo) Run() (err error) {
 		"-mem", strconv.Itoa(defnodo.config.VM.Memory),
 		"-disk", fmt.Sprintf("size=%s", defnodo.config.VM.DiskSize),
 		"-networking=vpnkit",
+		// networkingParam,
 		"-vsock-ports", "2376",
 		"-squashfs",
 		"-data-file", dataFile,
@@ -96,6 +108,20 @@ func (defnodo *DefNoDo) Run() (err error) {
 	cmd.Run()
 
 	return
+}
+
+func (defnodo *DefNoDo) runVPNKit(vpnkitBin string, ethSock string, portSock string, vsockSock string) {
+	cmd := exec.Command(vpnkitBin,
+		"--ethernet", ethSock,
+		"--port", portSock,
+		"--vsock-path", vsockSock)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	cmd.Env = os.Environ()
+
+	log.Printf("Staring vpnkit: %+v\n", cmd.Args)
+	cmd.Run()
 }
 
 func startCleanupHandler(basePath string, tempFile string) {

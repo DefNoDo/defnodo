@@ -94,7 +94,8 @@ services:
   # for vpnkit coordination and /run/config/docker for the configuration file.
   # Include 9p FS mount tools to allow directory and volume mounting from the host
   - name: docker-dfm
-    image: docker:dind
+    # image: docker:dind
+    image: docker:20.10.10-dind
     # image: docker:18.06.0-ce-dind
     capabilities:
       - all
@@ -108,14 +109,13 @@ services:
       - /lib/modules:/lib/modules
       - /var/vpnkit:/port # vpnkit control 9p mount
       - /var/run:/var/run
-      - /run:/run
+      - /tmp:/var/run/containerd
       - /run/config/docker:/var/config/docker
       - /usr/bin/vpnkit-expose-port:/usr/bin/vpnkit-expose-port # userland proxy
       - /usr/bin/vpnkit-iptables-wrapper:/usr/bin/iptables # iptables wrapper
       - /usr/local/bin/mount9p_fuse:/usr/local/bin/mount9p_fuse # FUSE 9p FS mount tool
       - /usr/local/bin/mount_home_dirs.sh:/usr/local/bin/mount_home_dirs.sh # Sets up the proper mount locations
       - /usr/local/bin/run_docker.sh:/usr/local/bin/run_docker.sh # Wraps mounts and starts docker
-      - /usr/local/share/containerd_config.toml:/etc/containerd/config.toml # Internal containerd minimal config
       - /dev/fuse:/dev/fuse
     command: [ "/usr/local/bin/run_docker.sh" ]
     runtime:
@@ -123,3 +123,4 @@ services:
 
 # Generic vpnkit command to pair with a build image from this file
 # vpnkit --ethernet docker-for-mac-state/vpnkit_eth.sock --vsock-path docker-for-mac-state/connect  --port docker-for-mac-state/vpnkit_port.sock --host-names host.docker.internal --debug
+# /usr/local/bin/vpnkit --ethernet /Users/mbrace/temp/defnodo/defnodo-data/defnodo-state/vpnkit_eth.sock --vsock-path /Users/mbrace/temp/defnodo/defnodo-data/defnodo-state/connect --port /Users/mbrace/temp/defnodo/defnodo-data/defnodo-state/vpnkit_port.sock
