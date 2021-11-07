@@ -7,6 +7,7 @@ if [ $# -gt 0 ]; then
 fi
 
 export DOCKER_HOST
+export DOCKER_BUILDKIT=1
 
 echo "Building vpnkit-forwarder..."
 docker build -t defnodo/vpnkit-forwarder:v0.5.0-custom dockerfiles/. -f dockerfiles/Dockerfile.vpnkit-forwarder
