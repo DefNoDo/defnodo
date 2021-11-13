@@ -4,12 +4,22 @@
 # Currently only uses the first entry in the list
 volume-mounts:
   - /Users/mbrace/dev
-# Path to daemon.json to use for docker.
-# Default: {}
-docker-daemon.json: daemon.json
 # Directory containing VM image and to use for associated
 # data and sockets
 data-directory: defnodo-data
+# Configuration for the container runtime
+container-runtime:
+  # Path to daemon.json to use for docker.
+  # Default: {}
+  docker-daemon.json: daemon.json
+  # Container runtime to use, podman or docker (only docker works right now)
+  runtime: docker
+  # Version of the container runtime to run, default latest
+  # Must have an entry in the versions-file if it's not latest
+  version: latest
+  # version: "18.09"
+  # File mapping version numbers and hashes for nix package specification
+  versions-file: docker.versions
 # Underlying VM configuration
 vm:
   # Amount of memory to allocate in M

@@ -11,13 +11,20 @@ import (
 
 // Config is the runtime configuration
 type Config struct {
-	DataDirectory       string   `yaml:"data-directory"`
-	VolumeMounts        []string `yaml:"volume-mounts"`
-	DockerDaemonJson    string   `default:"" yaml:"docker-daemon.json"`
-	VM                  VMConfig `yaml:"vm"`
-	IsService           bool     `default:"false"`
-	Interactive         bool     `default:"false"`
+	DataDirectory       string                 `yaml:"data-directory"`
+	VolumeMounts        []string               `yaml:"volume-mounts"`
+	ContainerRuntime    ContainerRuntimeConfig `yaml:"container-runtime"`
+	VM                  VMConfig               `yaml:"vm"`
+	IsService           bool                   `default:"false"`
+	Interactive         bool                   `default:"false"`
 	ConfigBaseDirectory string
+}
+
+type ContainerRuntimeConfig struct {
+	DaemonJson   string `default:"" yaml:"docker-daemon.json"`
+	Runtime      string `default:"docker" yaml:"runtime"`
+	Version      string `default:"latest" yaml:"version"`
+	VersionsFile string `default:"docker.versions" yaml:"versions-file"`
 }
 
 type VMConfig struct {

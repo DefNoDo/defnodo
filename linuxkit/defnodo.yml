@@ -95,8 +95,9 @@ services:
   # Include 9p FS mount tools to allow directory and volume mounting from the host
   - name: docker-dfm
     # image: docker:dind
-    image: docker:20.10.10-dind
+    # image: docker:20.10.10-dind
     # image: docker:18.06.0-ce-dind
+    image: defnodo/nix-docker:latest
     capabilities:
       - all
     net: host
@@ -117,7 +118,8 @@ services:
       - /usr/local/bin/mount_home_dirs.sh:/usr/local/bin/mount_home_dirs.sh # Sets up the proper mount locations
       - /usr/local/bin/run_docker.sh:/usr/local/bin/run_docker.sh # Wraps mounts and starts docker
       - /dev/fuse:/dev/fuse
-    command: [ "/usr/local/bin/run_docker.sh" ]
+    # command: [ "/usr/local/bin/run_docker.sh" ]
+    command: [ "/usr/local/bin/run_nix_docker.sh" ]
     runtime:
       mkdir: ["/var/lib/docker"]
 
