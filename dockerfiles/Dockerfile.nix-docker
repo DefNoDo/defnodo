@@ -1,0 +1,14 @@
+FROM alpine
+
+RUN apk update && \
+  apk add curl xz sudo bash
+RUN adduser -D -s /bin/bash nixuser && \
+  addgroup nixbld && \
+  addgroup nixuser nixbld && \
+  echo "nixuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN su nixuser -c "curl -L -o /tmp/nix_install  https://nixos.org/nix/install && chmod a+x /tmp/nix_install && ./tmp/nix_install --no-daemon"
+RUN echo ". /home/nixuser/.nix-profile/etc/profile.d/nix.sh" >> /home/nixuser/.bash_profile && \
+  chown nixuser:nixuser /home/nixuser/.bash_profile
+
+COPY scripts/mount_home_dirs.sh /usr/local/bin/mount_home_dirs.sh
+COPY scripts/run_nix_docker.sh /usr/local/bin/run_nix_docker.sh

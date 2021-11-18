@@ -7,6 +7,6 @@ apk add fuse
 mkdir -p "${MOUNT_DIR}"
 /usr/local/bin/mount9p_fuse 192.168.65.2:7777 "${MOUNT_DIR}" &
 
-while 1; do
+while true; do
   ls "${MOUNT_DIR}" > /dev/null
 done

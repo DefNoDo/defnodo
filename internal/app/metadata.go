@@ -22,8 +22,9 @@ type dockerMetadata struct {
 }
 
 type dockerEntriesMetadata struct {
-	Daemon     dockerDaemonJson     `json:"daemon.json"`
-	UserConfig dockerUserConfigJson `json:"user.config"`
+	Daemon        dockerDaemonJson        `json:"daemon.json"`
+	UserConfig    dockerUserConfigJson    `json:"user.config"`
+	DockerVersion dockerVersionConfigJson `json:"docker.version"`
 }
 
 type dockerDaemonJson struct {
@@ -34,11 +35,15 @@ type dockerUserConfigJson struct {
 	Content string `json:"content"`
 }
 
+type dockerVersionConfigJson struct {
+	Content string `json:"content"`
+}
+
 func (defnodo *DefNoDo) generateMetadata(directory string) (filename string, err error) {
 	// Read any specified daemon.json
 	daemon_json := "{}"
-	if defnodo.config.DockerDaemonJson != "" {
-		daemon_location := filepath.Join(defnodo.config.ConfigBaseDirectory, defnodo.config.DockerDaemonJson)
+	if defnodo.config.ContainerRuntime.DaemonJson != "" {
+		daemon_location := filepath.Join(defnodo.config.ConfigBaseDirectory, defnodo.config.ContainerRuntime.DaemonJson)
 		daemon, err := os.ReadFile(daemon_location)
 		if err != nil {
 			return filename, err
@@ -51,6 +56,12 @@ func (defnodo *DefNoDo) generateMetadata(directory string) (filename string, err
 		daemon_split := strings.Split(string(daemon), "\n")
 		daemon_json = strings.Join(daemon_split, "\n")
 	}
+
+	runtime_version, err := getRuntimeVersionHash(filepath.Join(defnodo.config.ConfigBaseDirectory, defnodo.config.ContainerRuntime.VersionsFile), defnodo.config.ContainerRuntime.Version)
+	if err != nil {
+		return
+	}
+
 	// Build the different parts of the metadata
 	data := &metadataJson{
 		Docker: dockerMetadata{
@@ -60,6 +71,9 @@ func (defnodo *DefNoDo) generateMetadata(directory string) (filename string, err
 				},
 				UserConfig: dockerUserConfigJson{
 					Content: defnodo.config.VolumeMounts[0],
+				},
+				DockerVersion: dockerVersionConfigJson{
+					Content: runtime_version,
 				},
 			},
 		},
@@ -75,5 +89,27 @@ func (defnodo *DefNoDo) generateMetadata(directory string) (filename string, err
 	// render the json to the temp file
 	js, err := json.MarshalIndent(data, "", "  ")
 	_, err = file.Write(js)
+	return
+}
+
+func getRuntimeVersionHash(filename string, version string) (result string, err error) {
+	result = ""
+	if version == "latest" {
+		result = "latest latest"
+	}
+
+	data, err := ioutil.ReadFile(filename)
+	versions := strings.Split(string(data), "\n")
+	for _, line := range versions {
+		if strings.HasPrefix(line, version) {
+			// Don't break out of the loop so it gets the last value for the highest matching version
+			result = line
+		}
+	}
+
+	if result == "" {
+		msg := fmt.Sprintf("%s does not contain an entry for %s\n", filename, version)
+		err = errors.New(msg)
+	}
 	return
 }

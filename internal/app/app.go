@@ -42,7 +42,7 @@ func (defnodo *DefNoDo) Stop(s service.Service) error {
 func (defnodo *DefNoDo) Run() (err error) {
 	log.Printf("Starting service with config: %+v\n", defnodo.config)
 
-	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", defnodo.config.VolumeMounts, defnodo.config.Interactive)
+	fileShare, err := serve9p.NewServe9P("tcp://127.0.0.1:7777", defnodo.config.VolumeMounts, false)
 	if err != nil {
 		log.Fatal(err)
 	}

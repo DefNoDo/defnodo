@@ -14,3 +14,6 @@ docker build -t defnodo/vpnkit-forwarder:v0.5.0-custom dockerfiles/. -f dockerfi
 
 echo "Building defnodo utils..."
 docker build -t defnodo/utils:latest . -f dockerfiles/Dockerfile.utils
+
+echo "Building Nix-based docker image"
+docker build -t defnodo/nix-docker:latest dockerfiles/. -f dockerfiles/Dockerfile.nix-docker
