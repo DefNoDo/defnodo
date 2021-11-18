@@ -57,6 +57,12 @@ func (defnodo *DefNoDo) Run() (err error) {
 	linuxkitPath := filepath.Join(exPath, "linuxkit")
 	log.Printf("linuxkit path: %s\n", linuxkitPath)
 
+	// Create data directory if it doesn't exist
+	err = os.MkdirAll(defnodo.config.DataDirectory, os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	runLocation := defnodo.config.DataDirectory
 	if !strings.HasPrefix(runLocation, "/") {
 		runLocation = filepath.Join(exPath, "..", defnodo.config.DataDirectory)

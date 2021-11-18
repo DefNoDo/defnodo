@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ func main() {
 			Name:    "config",
 			Usage:   "Load defnodo configuration from `FILE`",
 			Aliases: []string{"c"},
-			Value:   "~/.defnodorc",
+			Value:   fmt.Sprintf("%s/.defnodorc", getUserDir()),
 			EnvVars: []string{"DEFNODORC"},
 		},
 	}
@@ -236,4 +237,12 @@ func loadGlobalOptions(c *cli.Context) (result *GlobalConfig, err error) {
 		Interactive:   c.Bool("interactive"),
 	}
 	return
+}
+
+func getUserDir() string {
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		return "/"
+	}
+	return dirname
 }

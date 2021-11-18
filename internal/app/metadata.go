@@ -57,7 +57,7 @@ func (defnodo *DefNoDo) generateMetadata(directory string) (filename string, err
 		daemon_json = strings.Join(daemon_split, "\n")
 	}
 
-	runtime_version, err := getRuntimeVersionHash(filepath.Join(defnodo.config.ConfigBaseDirectory, defnodo.config.ContainerRuntime.VersionsFile), defnodo.config.ContainerRuntime.Version)
+	runtime_version, err := getRuntimeVersionHash(filepath.Join(defnodo.config.DataDirectory, defnodo.config.ContainerRuntime.VersionsFile), defnodo.config.ContainerRuntime.Version)
 	if err != nil {
 		return
 	}
