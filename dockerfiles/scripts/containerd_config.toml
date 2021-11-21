@@ -1,5 +1,0 @@
-version = 2
-state = "/run/containerd2"
-
-[grpc]
-  address = "/run/containerd2/containerd.sock"
