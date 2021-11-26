@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/creasty/defaults"
 	"gopkg.in/yaml.v2"
@@ -69,6 +70,15 @@ func LoadConfig(location string) (config *Config, err error) {
 		return
 	}
 	config.ConfigBaseDirectory = configDir
+
+	if !strings.HasPrefix(config.DataDirectory, "/") {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		config.DataDirectory = filepath.Join(cwd, config.DataDirectory)
+	}
+
 	return
 }
 

@@ -9,6 +9,7 @@ import (
 func ProcessService(defnodo *DefNoDo, serviceConfig *service.Config, command string) (err error) {
 	// install, start, stop, restart, uninstall, special case status
 	log.Println("Processing DefNoDo service...")
+	log.Fatalf("SERVICE MODE CURRENTLY DISABLED\n")
 	s, err := service.New(defnodo, serviceConfig)
 
 	if err != nil {

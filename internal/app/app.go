@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"syscall"
 
 	"github.com/ismarc/defnodo/internal/serve9p"
@@ -64,9 +63,6 @@ func (defnodo *DefNoDo) Run() (err error) {
 	}
 
 	runLocation := defnodo.config.DataDirectory
-	if !strings.HasPrefix(runLocation, "/") {
-		runLocation = filepath.Join(exPath, "..", defnodo.config.DataDirectory)
-	}
 
 	dataFile, err := defnodo.generateMetadata(runLocation)
 	if err != nil {

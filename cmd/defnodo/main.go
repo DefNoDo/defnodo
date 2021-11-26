@@ -70,8 +70,33 @@ func main() {
 			},
 		},
 		{
+			Name:    "update-vm",
+			Usage:   "Update the installed VM image",
+			Aliases: []string{"u"},
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "force",
+					Usage:   "Force a VM image update",
+					Aliases: []string{"f"},
+					Value:   false,
+				},
+			},
+			Action: func(c *cli.Context) (err error) {
+				globalConfig, err := loadGlobalOptions(c)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				err = app.UpdateVM(globalConfig.Config.DataDirectory, c.Bool("force"))
+				if err != nil {
+					log.Fatal(err)
+				}
+				return
+			},
+		},
+		{
 			Name:    "service",
-			Usage:   "Control defnodo service",
+			Usage:   "DISABLED: Control defnodo service",
 			Aliases: []string{"s"},
 			Flags:   serviceFlags,
 			Subcommands: []*cli.Command{
