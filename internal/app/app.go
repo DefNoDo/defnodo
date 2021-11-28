@@ -81,6 +81,19 @@ func (defnodo *DefNoDo) Run() (err error) {
 
 	// networkingParam := fmt.Sprintf("-networking=vpnkit,%s,%s", ethSock, portSock)
 
+	// Create docker.sock symlink
+	stateSock := filepath.Join(runLocation, "defnodo-state", "docker.sock")
+	if _, err := os.Stat(stateSock); err == nil {
+		err = os.Remove(stateSock)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	err = os.Symlink(filepath.Join(runLocation, "defnodo-state", "guest.00000948"), filepath.Join(runLocation, "defnodo-state", "docker.sock"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// See scripts/run_vm.sh for example run command
 	cmd := exec.Command(linuxkitPath,
 		"run", "hyperkit",
