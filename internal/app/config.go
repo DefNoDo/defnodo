@@ -1,5 +1,12 @@
 package app
 
+// Defnodo configuration loading and handling.
+// General theory:
+// Config.DataDirectory, if not an absolute path, is treated as a sibling of the config file location.
+// Config.ContainerRuntime values (if filenames/paths), if not an absolute path, is assumed to be in
+//   the Config.DataDirectory.
+// All values set and returned have absolute paths set, all relative values have been resolved
+
 import (
 	"log"
 	"os"
@@ -9,6 +16,12 @@ import (
 	"github.com/creasty/defaults"
 	"gopkg.in/yaml.v2"
 )
+
+// Minimal os.File interface needed for config loading
+type ConfigFile interface {
+	Name() string
+	Read([]byte) (int, error)
+}
 
 // Config is the runtime configuration
 type Config struct {
@@ -48,55 +61,54 @@ func (c *Config) SetDefaults() {
 	}
 }
 
-// Load a configuration from a given location.  Any unset values will
-// use the default values associated.  If location does not exist, only
+// Load a configuration from the given file.  Any unset values will
+// use the default values associated.  If no file is supplied (file == nil), only
 // default values will be used
-func LoadConfig(location string) (config *Config, err error) {
+func LoadConfig2(file ConfigFile) (config *Config, err error) {
 	config = &Config{}
-	if _, err := os.Stat(location); !os.IsNotExist(err) {
-		log.Printf("Loading config from %s\n", location)
-		config, err = loadConfig(config, location)
+
+	baseDirectory, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	if file != nil {
+		baseDirectory, err = filepath.Abs(filepath.Dir(file.Name()))
 		if err != nil {
-			return nil, err
+			return
 		}
-	} else {
-		log.Printf("No config found, using all defaults...\n")
+		err = config.load(file)
+		if err != nil {
+			return
+		}
 	}
 
 	defaults.Set(config)
+	config.ConfigBaseDirectory = baseDirectory
 
-	configDir, err := filepath.Abs(filepath.Dir(location))
-	if err != nil {
-		return
+	config.DataDirectory = addPathPrefix(config.DataDirectory, config.ConfigBaseDirectory)
+	for index, value := range config.VolumeMounts {
+		config.VolumeMounts[index] = addPathPrefix(value, config.ConfigBaseDirectory)
 	}
-	config.ConfigBaseDirectory = configDir
-
-	if !strings.HasPrefix(config.DataDirectory, "/") {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return nil, err
-		}
-		config.DataDirectory = filepath.Join(cwd, config.DataDirectory)
-	}
-
+	config.ContainerRuntime.DaemonJson = addPathPrefix(config.ContainerRuntime.DaemonJson, config.DataDirectory)
+	config.ContainerRuntime.VersionsFile = addPathPrefix(config.ContainerRuntime.VersionsFile, config.DataDirectory)
 	return
 }
 
-// Load a yaml configuration from disk
-func loadConfig(c *Config, location string) (config *Config, err error) {
-	file, err := os.Open(location)
-	if err != nil {
-		log.Printf("Error loading config file '%s'\n", location)
-		return
-	}
-	defer file.Close()
-
+// Load a yaml config file into the config
+func (config *Config) load(file ConfigFile) (err error) {
 	decoder := yaml.NewDecoder(file)
-	err = decoder.Decode(c)
+	err = decoder.Decode(config)
 	if err != nil {
-		log.Print("Error parsing config file\n")
+		return err
 	}
+	return
+}
 
-	config = c
+// Add a prefix to the value if it is a relative rather than absolute value
+func addPathPrefix(value string, prefix string) (result string) {
+	result = value
+	if !strings.HasPrefix(value, "/") && value != "" {
+		result = filepath.Join(prefix, value)
+	}
 	return
 }

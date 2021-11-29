@@ -4,3 +4,4 @@ vm-image/
 defnodo-state/
 defnodo.tar.gz
 metadata.*.json
+coverage.out

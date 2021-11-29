@@ -11,7 +11,7 @@ data-directory: /Users/mbrace/dev/defnodo/defnodo-data
 container-runtime:
   # Path to daemon.json to use for docker.
   # Default: {}
-  docker-daemon.json: daemon.json
+  docker-daemon.json: /Users/mbrace/dev/defnodo/examples/daemon.json
   # Container runtime to use, podman or docker (only docker works right now)
   runtime: docker
   # Version of the container runtime to run, default latest
