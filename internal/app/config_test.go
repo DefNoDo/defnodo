@@ -54,7 +54,7 @@ func (suite *ConfigTestSuite) TestDefaultsNoFile() {
 
 	datadir := filepath.Join(homedir, ".defnodo")
 
-	config, err := LoadConfig2(nil)
+	config, err := LoadConfig(nil)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), datadir, config.DataDirectory)
 	assert.Len(suite.T(), config.VolumeMounts, 1)
@@ -93,7 +93,7 @@ vm:
 `,
 	}
 
-	config, err := LoadConfig2(file)
+	config, err := LoadConfig(file)
 	assert.Nil(suite.T(), err)
 
 	assert.Equal(suite.T(), "/another/dir/defnodo/defnodo-data", config.DataDirectory)
@@ -133,7 +133,7 @@ vm:
 `,
 	}
 
-	config, err := LoadConfig2(file)
+	config, err := LoadConfig(file)
 	assert.Nil(suite.T(), err)
 
 	assert.Equal(suite.T(), "/my/homedir/defnodo-data", config.DataDirectory)
@@ -168,7 +168,7 @@ container-runtime:
 `,
 	}
 
-	config, err := LoadConfig2(file)
+	config, err := LoadConfig(file)
 	assert.Nil(suite.T(), err)
 
 	assert.Equal(suite.T(), "/my/homedir/defnodo-data", config.DataDirectory)
@@ -199,6 +199,6 @@ data-directory: defnodo-data
 `,
 	}
 
-	_, err := LoadConfig2(file)
+	_, err := LoadConfig(file)
 	assert.NotNil(suite.T(), err)
 }

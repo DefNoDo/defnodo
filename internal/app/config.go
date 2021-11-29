@@ -64,7 +64,7 @@ func (c *Config) SetDefaults() {
 // Load a configuration from the given file.  Any unset values will
 // use the default values associated.  If no file is supplied (file == nil), only
 // default values will be used
-func LoadConfig2(file ConfigFile) (config *Config, err error) {
+func LoadConfig(file ConfigFile) (config *Config, err error) {
 	config = &Config{}
 
 	baseDirectory, err := os.UserHomeDir()

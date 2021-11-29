@@ -239,7 +239,7 @@ func loadGlobalOptions(c *cli.Context) (result *GlobalConfig, err error) {
 	defer configFile.Close()
 
 	// config, err := app.LoadConfig(c.String("config"))
-	config, err := app.LoadConfig2(configFile)
+	config, err := app.LoadConfig(configFile)
 	if err != nil {
 		return
 	}
